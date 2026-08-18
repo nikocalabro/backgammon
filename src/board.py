@@ -26,8 +26,8 @@ class Board:
         self.cols = constants.NUM_COLS
         # [[5, 0, 0, 0, -3, 0, -5, 0, 0, 0, 0, 2],
         #  [-5, 0, 0, 0, 3, 0, 5, 0, 0, 0, 0, -2]]
-        self.game_board = np.array([[5, 0, 0, 0, -3, 0, -5, 0, 0, 0, 0, 2],
-                                    [-5, 0, 0, 0, 3, 0, 5, 0, 0, 0, 0, -2]])
+        self.game_board = np.array([[5, 0, 0, 0, -3, 0, -5, 0, 0, 0, 0, 2,          0],
+                                    [-5, 0, 0, 0, 3, 0, 5, 0, 0, 0, 0, -2,          0]])
         # self.game_board = np.zeros((self.rows, self.cols))
 
         # last move as a tuple (row, col) on game_board
@@ -41,17 +41,24 @@ class Board:
         Returns True if move was successfully applied to the board, otherwise False.
         """
 
+        # Scoring
         if move[1] >= constants.NUM_COLS and self.can_score(player_identifier):
-            # update score
-            # if player_identifier == constants.PLAYER_1_IDENTIFIER:
+            
+            self.game_board[move[0], -1] += abs(player_identifier)
 
             return True
 
         if self.is_move_valid(move,player_identifier):
+
+            ########################################################################
             # TODO: MAKE THIS SET PLAYER JAIL SO THEN THE TURN IS DIFFERENT
+            ########################################################################
+
             if self.game_board[move[0], move[1]] == -player_identifier:
                 self.game_board[move[0], move[1]] = player_identifier
                 #game_manager.current_player.in_jail = True
+
+
             else:
                 self.game_board[move[0], move[1]] += player_identifier
             # if self.game_board[move[0], move[1]] == 0: #
@@ -68,8 +75,8 @@ class Board:
         Clear the game board and reset last_move for new game
         """
 
-        self.game_board = np.array([[5,0,0,0,-3,0,-5,0,0,0,0,2],
-                                    [-5,0,0,0,3,0,5,0,0,0,0,-2]])
+        self.game_board = np.array([[5,0,0,0,-3,0,-5,0,0,0,0,2,           0],
+                                    [-5,0,0,0,3,0,5,0,0,0,0,-2,           0]])
         self.last_move = None
 
 
@@ -96,13 +103,13 @@ class Board:
         if selection and self.game_board[row][col] / player_identifier <= 0:
             return False
 
-        #if the space isnt 0, and the piece is opposite colored, and theres only one
+        # if a spot has only one piece of the opposite color, return True
         if player_identifier != 0 and self.game_board[row][col] / player_identifier < 0:
-            return self.game_board[row][col] == 1 or self.game_board[row][col] == -1
+            return self.game_board[row][col] == 1 or self.game_board[row][col] == -1 # this leads to jail
         # if the board spot is 0 or the player identifier that move is valid
         if self.game_board[row][col] / player_identifier >= 0:
             return True
-        print("4")
+        # print("4")
         return False
 
 
@@ -111,53 +118,47 @@ class Board:
         """
         If there are any no pieces on the board of one color they win (including no pieces in prison)
         """
-
         if self.last_move is None:
             return None
-        player1_has_won = True
-        player2_has_won = True
-        for row in range(self.rows):
-            for col in range(self.cols):
-                if self.game_board[row][col] < 0:
-                    player2_has_won = False
-                if self.game_board[row][col] > 0:
-                    player1_has_won = False
-        if player1_has_won:
-            return constants.PLAYER_1_IDENTIFIER
-        elif player2_has_won:
-            return constants.PLAYER_2_IDENTIFIER
-        return None
 
-    def get_game_board_in_board(self) -> np.ndarray:
-        return self.game_board
+        for row in range(self.rows):
+            if abs(self.game_board[row][-1]) == constants.NUM_TOKENS_PER_PLAYER:
+                return self.game_board[row][-1] // abs(self.game_board[row][-1])
+
+        return None
 
     def can_score(self, identifier) -> bool:
         for row in range(self.rows):
             for col in range(self.cols):
-                # player 1, overlook row 1 col 6-12, and the identifier is the same sign as the one we are looking for
-                if identifier > 0 and row == 0 and col < 6 and self.game_board[row][col] != 0 and self.game_board[row][col]//abs(self.game_board[row][col]) == identifier:
-                    return False
-                #player 2, overlook row 2 col 6-12, and the identifier is the same sign as the one we are looking for
-                elif identifier < 0 and row == 1 and col < 6 and self.game_board[row][col] != 0 and self.game_board[row][col]//abs(self.game_board[row][col]) == identifier:
-                    return False
 
-                # # player 1, overlook row 1 col 6-12, and the identifier is the same sign as the one we are looking for
-                # if identifier > 0 and row == 0:
-                #     return False
-                # elif identifier > 0 and row == 1:
-                #     if (col < 6 and self.game_board[row][col] != 0
-                #             and self.game_board[row][col] // abs(self.game_board[row][col]) == identifier):
-                #         return False
-                #
-                # # player 2, overlook row 2 col 6-12, and the identifier is the same sign as the one we are looking for
-                # if identifier < 0 and row == 1:
-                #     return False
-                # elif identifier < 0 and row == 0:
-                #     if (col < 6 and self.game_board[row][col] != 0
-                #             and self.game_board[row][col] // abs(self.game_board[row][col]) == identifier):
-                #         return False
+                # Add if in jail, return false condition
+
+                # player 1, overlook row 1 col 6-12, and the identifier is the same sign as the one we are looking for
+                if identifier > 0 and row == 0 and self.game_board[row][col] > 0:
+                    return False
+                elif identifier > 0 and row == 1 and col < 6 and self.game_board[row][col] > 0:
+                    return False
+                
+                # player 2, overlook row 2 col 6-12, and the identifier is the same sign as the one we are looking for
+                if identifier < 0 and row == 1 and self.game_board[row][col] < 0:
+                    return False
+                elif identifier < 0 and row == 0 and col < 6 and self.game_board[row][col] < 0:
+                    return False
         return True
 
+
+
+    def get_game_board_in_board(self) -> np.ndarray:
+        """
+        Returns game board
+        """
+        return self.game_board
+
+    def get_scores(self) -> tuple[int, int]:
+        """
+        Returns player scores in tuple (player1_score, player2_score)
+        """
+        return (self.game_board[1, -1], self.game_board[0, -1])
 
     def get_possible_moves(self, dice_rolls,og_identifier) -> list[tuple[int, int]]|None:
 
@@ -196,6 +197,6 @@ class Board:
 
                     if move is not None and self.is_move_valid(move, og_identifier):
                         possible_moves.append(move)
-                        print("board iden:",self.game_board[row][col],"iden",og_identifier,"moving to:",move)
+                        # print("board iden:",self.game_board[row][col],"iden",og_identifier,"moving to:",move)
         return possible_moves
 

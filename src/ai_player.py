@@ -153,7 +153,7 @@ class AIPlayer(Player):
                 max_score = max(score, max_score)
                 alpha = max(alpha, score)
                 if alpha >= beta:
-                    print("Pruning")
+                    # print("Pruning")
                     break
 
             return max_score
@@ -174,7 +174,7 @@ class AIPlayer(Player):
                 min_score = min(score, min_score)
                 beta = min(beta, score)
                 if alpha >= beta:
-                    print("Pruning")
+                    # print("Pruning")
                     break
 
             return min_score
@@ -189,17 +189,17 @@ class AIPlayer(Player):
             src_col = col + roll
             # jumping over board
             if src_col < 0:
-                print("JUMP remove 1")
+                # print("JUMP remove 1")
                 return identifier, abs(src_col) - 1
             # moving towards jumping WORKING
-            print("MOVE TOWARDS JUMP remove 2")
+            # print("MOVE TOWARDS JUMP remove 2")
             return other_row, src_col
         #passed the jumping portion but the roll might be
         src_col = col - roll
         if src_col < 0:
-            print("PASSED JUMP remove last row remove 3")
+            # print("PASSED JUMP remove last row remove 3")
             return other_row, abs(src_col) - 1
-        print("PASSED JUMP remove 4")
+        # print("PASSED JUMP remove 4")
         return identifier, src_col
 
 

@@ -73,6 +73,7 @@ class GameManager:
 
         if self.game_state != GameState.PLAYING:
             return
+        self.update_scores()
         #convert pending move into a board space
         if self.current_player.is_ai_player:
             chosen_move = self.current_player.choose_move(self.board, dice_rolls)
@@ -83,7 +84,7 @@ class GameManager:
             if move_within_bounds(pending_move,(constants.BOARD_CENTER_X*.085, constants.BOARD_CENTER_Y),
                                   (constants.DICE_WIDTH,constants.DICE_WIDTH)) or self.current_player.is_ai_player:
                 dice_rolls = roll_dice()
-                print("DICE:",dice_rolls)
+                # print("DICE:",dice_rolls)
                 current_stage += 1
         elif (current_stage == 1 and
               self.board.is_move_valid(chosen_move, self.current_player.identifier, not self.current_player.is_ai_player)):
@@ -102,7 +103,7 @@ class GameManager:
                     if self.board.apply_move(chosen_move, self.current_player.identifier):
                         # DICE HAS BEEN USED (after we calc remove move correct)
                         dice_rolls[chosen_move[-1]][-1] = False
-                        print("Chosen move", chosen_move, "remove_move", remove_move)
+                        # print("Chosen move", chosen_move, "remove_move", remove_move)
                         if remove_move is not None:
                             self.board.game_board[remove_move[0]][remove_move[1]] -= self.current_player.identifier
 
@@ -198,6 +199,11 @@ class GameManager:
             else:
                 current_stage = 1
 
+    def update_scores(self):
+        player1_score, player2_score = self.board.get_scores()
+        self.player1.score = player1_score
+        self.player2.score = player2_score
+
     def update_ai_player_testing_diagnostics(self, winning_player_identifier):
         if winning_player_identifier == "Tie":
             if self.player1.is_ai_player:
@@ -263,3 +269,5 @@ class GameManager:
     def current_player(self):
         return self.current_player
 
+    def get_scores(self):
+        return self.board.get_scores()

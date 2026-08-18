@@ -153,13 +153,12 @@ def draw_game_board() -> None:
         col_screen = constants.BOARD_ORIGIN_X + col * constants.CELL_SIZE
         row_screen = constants.BOARD_ORIGIN_Y + row * constants.HEIGHT
 
-        # print(highlight_possible_moves)
+        # Drawing score zones
         if len(highlight_possible_moves) >= 1 and highlight_possible_moves[0][0] == row and highlight_possible_moves[0][1] == col-1:
             draw_rect_center(window, (col_screen,row_screen), (constants.CELL_SIZE, constants.HEIGHT),constants.COLOR_YELLOW, False,0, 6)
         if len(highlight_possible_moves) == 2 and highlight_possible_moves[1][0] == row and highlight_possible_moves[1][1] == col-1:
             draw_rect_center(window, (col_screen, row_screen), (constants.CELL_SIZE, constants.HEIGHT),constants.COLOR_YELLOW, False, 0, 6)
-
-
+            
     if game_manager.player1.in_jail:
         draw_token(window, (middle_space_x, constants.BOARD_CENTER_Y), (constants.TOKEN_WIDTH, constants.TOKEN_WIDTH), constants.PLAYER_1_COLOR,constants.PLAYER_2_COLOR, 3)
     elif game_manager.player2.in_jail:
@@ -170,11 +169,17 @@ def draw_game_board() -> None:
     draw_rect_center(window, (constants.BOARD_CENTER_X, constants.BOARD_CENTER_Y),
                      (constants.MIDDLE_SPACE, constants.BOARD_HEIGHT), constants.COLOR_ORANGE_BROWN, False, 0, constants.MIDDLE_SPACE)
 
+    # Drawing Scores
+    draw_text(window, str(player1.score), 50, constants.PLAYER_1_COLOR,
+              (constants.BOARD_ORIGIN_X + ((constants.NUM_COLS + 1) * constants.CELL_SIZE), constants.BOARD_ORIGIN_Y + constants.HEIGHT))
+    # print("Player 1 score", player1.score)
     draw_text(window, str(player2.score), 50, constants.PLAYER_2_COLOR,
               (constants.BOARD_ORIGIN_X + ((constants.NUM_COLS + 1) * constants.CELL_SIZE), constants.BOARD_ORIGIN_Y))
-    draw_text(window, str(player1.score), 50, constants.PLAYER_1_COLOR,
-              (constants.BOARD_ORIGIN_X + ((constants.NUM_COLS + 1) * constants.CELL_SIZE),
-               constants.BOARD_ORIGIN_Y + constants.HEIGHT))
+    
+
+    # Drawing Jail
+    draw_rect_center(window, (constants.BOARD_CENTER_X, constants.BOARD_CENTER_Y), (constants.CELL_SIZE, constants.BOARD_HEIGHT),constants.COLOR_YELLOW, False, 0, 6)
+
 
 def draw_dice() -> None:
     global dice_rolls,dice_roll_anim
@@ -251,14 +256,21 @@ def draw_player_moves() -> None:
     # Convert board coordinates (row, col) into screen coordinates for drawing.
     # The board is centered at (BOARD_CENTER_X, BOARD_CENTER_Y).
     for row in range(constants.NUM_ROWS):
-        for col in range(constants.NUM_COLS):
+        for col in range(constants.NUM_COLS+1):
+
+
+            if col >= constants.NUM_COLS: # Draw players in jail
+
+                continue
+
+
             col_screen = constants.BOARD_ORIGIN_X + col * constants.CELL_SIZE
             row_screen = constants.BOARD_ORIGIN_Y + row * constants.HEIGHT
             # make the jump for the middle of the board
             if col > 5:
                 col_screen += constants.MIDDLE_SPACE
 
-            from src.board import Board
+            # from src.board import Board
             # draw the circles on each piece
             players_on_curr_tile = game_manager.get_game_board()[row][col]
             #these colors should be overwritten
