@@ -3,11 +3,8 @@
 ########################################################################################################################
 #hi niko
 # hi landon
-<<<<<<< HEAD
 # bellow landon im testing git some more
-=======
 # this is really awesome
->>>>>>> 6272c2d014c367c702d0d526d2a44824205a13e6
 import random
 from collections.abc import Sequence
 from enum import Enum
