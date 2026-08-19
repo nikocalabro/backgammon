@@ -3,6 +3,7 @@
 ########################################################################################################################
 #hi niko
 # hi landon
+# this is really awesome
 import random
 from collections.abc import Sequence
 from enum import Enum
