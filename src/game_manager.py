@@ -73,7 +73,12 @@ class GameManager:
 
         if self.game_state != GameState.PLAYING:
             return
+
         self.update_scores()
+        self.update_jail()
+
+        # print(self.board.get_game_board_in_board())
+
         #convert pending move into a board space
         if self.current_player.is_ai_player:
             chosen_move = self.current_player.choose_move(self.board, dice_rolls)
@@ -86,6 +91,10 @@ class GameManager:
                 dice_rolls = roll_dice()
                 # print("DICE:",dice_rolls)
                 current_stage += 1
+        elif current_stage == 1 and self.is_current_player_in_jail():
+            select_tile = (int((self.current_player.identifier + 1) / 2), -2)
+            current_stage += 1
+
         elif (current_stage == 1 and
               self.board.is_move_valid(chosen_move, self.current_player.identifier, not self.current_player.is_ai_player)):
             # print("Stage", current_stage)
@@ -137,25 +146,46 @@ class GameManager:
                 # would fall off the dge o the board
                 if not dice_rolls[i][-1]:
                     continue
-                if len(possible_moves) < 2:
-                    move = None
+                # if len(possible_moves) < 2:
+                #     move = None
 
-                    identifier = int((self.current_player.identifier + 1) / 2)  # will get 0 and 1 for black and white respectively
-                    if select_tile[0] == abs(identifier - 1) and select_tile[1] - dice_rolls[i][0] < 0:
-                        move = (identifier, abs(select_tile[1] - dice_rolls[i][0])-1)
-                    elif select_tile[0] == abs(identifier - 1):
-                        move = (abs(identifier - 1), select_tile[1] - dice_rolls[i][0])
+                identifier = int((self.current_player.identifier + 1) / 2)  # will get 0 and 1 for black and white respectively
+
+                # If piece is in jail, must move out of jail first
+                if self.get_game_board()[identifier][-2] != 0: 
+
+                    # Piece has to move somewhere on row 0 or 1 for player 1 and player 2 respectively
+                    # abs(identifier - 1) = 0 for player 1, 1 for player 2
+                    move = (abs(identifier - 1), constants.NUM_COLS - dice_rolls[i][0], i) 
+
+                    if not self.board.is_move_valid(move, self.current_player.identifier):
+                        move = None
+
+                elif select_tile[0] == abs(identifier - 1) and select_tile[1] - dice_rolls[i][0] < 0:
+                    move = (identifier, abs(select_tile[1] - dice_rolls[i][0])-1)
+                elif select_tile[0] == abs(identifier - 1):
+                    move = (abs(identifier - 1), select_tile[1] - dice_rolls[i][0])
+                else:
+                    col = select_tile[1] + dice_rolls[i][0]
+                    if col > constants.NUM_COLS:
+                        move = (identifier, constants.NUM_COLS)
                     else:
-                        col = select_tile[1] + dice_rolls[i][0]
-                        if col > constants.NUM_COLS:
-                            move = (identifier, constants.NUM_COLS)
-                        else:
-                            move = (identifier, select_tile[1] + dice_rolls[i][0])
+                        move = (identifier, select_tile[1] + dice_rolls[i][0])
 
-                    if move is not None and self.board.is_move_valid(move, self.current_player.identifier):
-                        possible_moves.append((move[0], move[1], i))
+                if move is not None and self.board.is_move_valid(move, self.current_player.identifier):
+                    candidate = (move[0], move[1], i)
+                    if candidate not in possible_moves:
+                        possible_moves.append(candidate)
 
-            # print("possible moves:",possible_moves)
+            # Skip turn if player has no valid moves in jail
+            if self.is_current_player_in_jail() and len(possible_moves) == 0:
+                self.current_player = self.player2 if self.current_player == self.player1 else self.player1
+                current_stage = 1
+                select_tile = None
+                move_tile = None
+                possible_moves = []
+                dice_rolls = None
+                current_stage = 0
 
             # check to see if the possible moves are the chosen move, then make that the select tile.
             for i in range(len(possible_moves)):
@@ -204,6 +234,17 @@ class GameManager:
         self.player1.score = player1_score
         self.player2.score = player2_score
 
+    def update_jail(self):
+        if self.board.game_board[1][-2] > 0:
+            self.player1.in_jail = True
+        else:
+            self.player1.in_jail = False
+
+        if self.board.game_board[0][-2] < 0:
+            self.player2.in_jail = True
+        else:
+            self.player2.in_jail = False
+
     def update_ai_player_testing_diagnostics(self, winning_player_identifier):
         if winning_player_identifier == "Tie":
             if self.player1.is_ai_player:
@@ -232,6 +273,12 @@ class GameManager:
 
     def is_player_two_turn(self):
         return self.current_player == self.player2
+
+    def is_current_player_in_jail(self):
+        if self.current_player == self.player1:
+            return self.player1.in_jail
+        else:
+            return self.player2.in_jail
 
     def player_one_won(self):
         winner = self.board.check_winner()

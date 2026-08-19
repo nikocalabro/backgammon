@@ -6,7 +6,6 @@ import numpy as np
 from src.player_base import Player
 from src.board import Board
 from src import constants
-from src.game_manager import possible_moves
 
 """
 ai_player.py

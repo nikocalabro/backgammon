@@ -51,7 +51,7 @@ class Mode(Enum):
 
 
 # Set the current mode here
-mode = Mode.HUMAN_PLAY_AI
+mode = Mode.HUMAN_PLAY_HUMAN
 
 if mode == Mode.TESTING_RANDOM_AI:
     player1 = AIPlayer(True, False)
@@ -158,16 +158,25 @@ def draw_game_board() -> None:
             draw_rect_center(window, (col_screen,row_screen), (constants.CELL_SIZE, constants.HEIGHT),constants.COLOR_YELLOW, False,0, 6)
         if len(highlight_possible_moves) == 2 and highlight_possible_moves[1][0] == row and highlight_possible_moves[1][1] == col-1:
             draw_rect_center(window, (col_screen, row_screen), (constants.CELL_SIZE, constants.HEIGHT),constants.COLOR_YELLOW, False, 0, 6)
+
+    # print(game_manager.get_game_board())
+
             
-    if game_manager.player1.in_jail:
-        draw_token(window, (middle_space_x, constants.BOARD_CENTER_Y), (constants.TOKEN_WIDTH, constants.TOKEN_WIDTH), constants.PLAYER_1_COLOR,constants.PLAYER_2_COLOR, 3)
-    elif game_manager.player2.in_jail:
-        draw_token(window, (middle_space_x, constants.BOARD_CENTER_Y), (constants.TOKEN_WIDTH, constants.TOKEN_WIDTH),constants.PLAYER_2_COLOR, constants.PLAYER_1_COLOR, 3)
+    # if game_manager.player1.in_jail:
+    #     draw_token(window, (middle_space_x, constants.BOARD_CENTER_Y), (constants.TOKEN_WIDTH, constants.TOKEN_WIDTH), constants.PLAYER_1_COLOR,constants.PLAYER_2_COLOR, 3)
+    # elif game_manager.player2.in_jail:
+    #     draw_token(window, (middle_space_x, constants.BOARD_CENTER_Y), (constants.TOKEN_WIDTH, constants.TOKEN_WIDTH),constants.PLAYER_2_COLOR, constants.PLAYER_1_COLOR, 3)
+
     #outlines the board
     draw_rect_center(window, (constants.BOARD_CENTER_X,constants.BOARD_CENTER_Y),(constants.BOARD_WIDTH+5,constants.BOARD_HEIGHT+5), constants.COLOR_ORANGE_BROWN,False, 0, 10)
     # draws the middle space
     draw_rect_center(window, (constants.BOARD_CENTER_X, constants.BOARD_CENTER_Y),
                      (constants.MIDDLE_SPACE, constants.BOARD_HEIGHT), constants.COLOR_ORANGE_BROWN, False, 0, constants.MIDDLE_SPACE)
+                     
+    # Drawing Jail
+    if player1.in_jail or player2.in_jail:
+        if game_manager.is_current_player_in_jail():
+            draw_rect_center(window, (constants.BOARD_CENTER_X, constants.BOARD_CENTER_Y), (constants.CELL_SIZE, constants.BOARD_HEIGHT),constants.COLOR_YELLOW, False, 0, 6)
 
     # Drawing Scores
     draw_text(window, str(player1.score), 50, constants.PLAYER_1_COLOR,
@@ -175,11 +184,8 @@ def draw_game_board() -> None:
     # print("Player 1 score", player1.score)
     draw_text(window, str(player2.score), 50, constants.PLAYER_2_COLOR,
               (constants.BOARD_ORIGIN_X + ((constants.NUM_COLS + 1) * constants.CELL_SIZE), constants.BOARD_ORIGIN_Y))
-    
 
-    # Drawing Jail
-    draw_rect_center(window, (constants.BOARD_CENTER_X, constants.BOARD_CENTER_Y), (constants.CELL_SIZE, constants.BOARD_HEIGHT),constants.COLOR_YELLOW, False, 0, 6)
-
+   
 
 def draw_dice() -> None:
     global dice_rolls,dice_roll_anim
@@ -258,9 +264,39 @@ def draw_player_moves() -> None:
     for row in range(constants.NUM_ROWS):
         for col in range(constants.NUM_COLS+1):
 
+            players_on_curr_tile = game_manager.get_game_board()[row][col]
+            if players_on_curr_tile == 0: # Continue if no players on this tile
+                continue
 
-            if col >= constants.NUM_COLS: # Draw players in jail
+            if col >= constants.NUM_COLS and (player1.in_jail or player2.in_jail): # Draw players in jail
+                
+                jail_height = constants.BOARD_HEIGHT // 3
+                col_screen = constants.BOARD_CENTER_X
+                row_screen = constants.BOARD_CENTER_Y + row * constants.HEIGHT
 
+                color = constants.PLAYER_2_COLOR if players_on_curr_tile < 0 else constants.PLAYER_1_COLOR
+                opposite_color = constants.PLAYER_1_COLOR if players_on_curr_tile < 0 else constants.PLAYER_2_COLOR
+                base_fit_in_tile = 4
+                if players_on_curr_tile != 0:
+                    distance_between_piece = (jail_height - constants.TOKEN_WIDTH) / players_on_curr_tile
+                if row == 0:
+                    piece_y_screen = row_screen - jail_height
+                else:
+                    piece_y_screen = row_screen - (constants.HEIGHT - jail_height)
+
+                for i in range(int(abs(players_on_curr_tile))):
+                    draw_token(window, (col_screen, piece_y_screen),(constants.TOKEN_WIDTH, constants.TOKEN_WIDTH), color,opposite_color, 3)
+                    if abs(players_on_curr_tile) > base_fit_in_tile:
+                        if row == 0:
+                            piece_y_screen += distance_between_piece * (abs(players_on_curr_tile)/players_on_curr_tile)
+                        else:
+                            piece_y_screen -= distance_between_piece * (abs(players_on_curr_tile) / players_on_curr_tile)
+                    else:
+                        if row == 0:
+                            piece_y_screen += constants.TOKEN_WIDTH
+                        else:
+                            piece_y_screen -= constants.TOKEN_WIDTH
+                
                 continue
 
 
@@ -270,9 +306,6 @@ def draw_player_moves() -> None:
             if col > 5:
                 col_screen += constants.MIDDLE_SPACE
 
-            # from src.board import Board
-            # draw the circles on each piece
-            players_on_curr_tile = game_manager.get_game_board()[row][col]
             #these colors should be overwritten
             color = constants.PLAYER_2_COLOR if players_on_curr_tile < 0 else constants.PLAYER_1_COLOR
             opposite_color = constants.PLAYER_1_COLOR if players_on_curr_tile < 0 else constants.PLAYER_2_COLOR

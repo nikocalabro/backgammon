@@ -25,9 +25,9 @@ class Board:
         self.rows = constants.NUM_ROWS
         self.cols = constants.NUM_COLS
         # [[5, 0, 0, 0, -3, 0, -5, 0, 0, 0, 0, 2],
-        #  [-5, 0, 0, 0, 3, 0, 5, 0, 0, 0, 0, -2]]
-        self.game_board = np.array([[5, 0, 0, 0, -3, 0, -5, 0, 0, 0, 0, 2,          0],
-                                    [-5, 0, 0, 0, 3, 0, 5, 0, 0, 0, 0, -2,          0]])
+        #  [-5, 0, 0, 0, 3, 0, 5, 0, 0, 0, 0, -2]]                             Jail (-2)   Goal (-1)
+        self.game_board = np.array([[5, 0, 0, 0, -3, 0, -5, 0, 0, 0, 0, 2,         0,          0],
+                                    [-5, 0, 0, 0, 3, 0, 5, 0, 0, 0, 0, -2,         0,          0]])
         # self.game_board = np.zeros((self.rows, self.cols))
 
         # last move as a tuple (row, col) on game_board
@@ -56,7 +56,8 @@ class Board:
 
             if self.game_board[move[0], move[1]] == -player_identifier:
                 self.game_board[move[0], move[1]] = player_identifier
-                #game_manager.current_player.in_jail = True
+                identifier = int((player_identifier + 1) / 2) # 1 for player 1, 0 for player 2
+                self.game_board[abs(identifier-1), -2] += -player_identifier # Piece is in repective jail
 
 
             else:
@@ -75,8 +76,8 @@ class Board:
         Clear the game board and reset last_move for new game
         """
 
-        self.game_board = np.array([[5,0,0,0,-3,0,-5,0,0,0,0,2,           0],
-                                    [-5,0,0,0,3,0,5,0,0,0,0,-2,           0]])
+        self.game_board = np.array([[5, 0, 0, 0, -3, 0, -5, 0, 0, 0, 0, 2,       0,           0],
+                                    [-5, 0, 0, 0, 3, 0, 5, 0, 0, 0, 0, -2,       0,           0]])
         self.last_move = None
 
 
@@ -176,11 +177,27 @@ class Board:
                         or self.game_board[row][col] == self.game_board[row][col] // abs(self.game_board[row][col]) != og_identifier):
                     continue
                 for i, roll in enumerate(dice_rolls):
-                    # # if 0, or not identifier skip!
+                    # if 0, or not identifier skip!
                     if not dice_rolls[i][-1]:
                         continue
                     move = None
-                    if og_identifier > 0 and self.game_board[row][col] > 0:
+
+                    # First dice is always used because this for loop ascends
+
+                    identifier = int((og_identifier + 1) / 2) # 1 for player 1, 0 for player 2
+
+                    # If piece is in jail, must move out of jail first
+                    if self.game_board[identifier][-2] != 0: 
+
+                        # Piece has to move somewhere on row 0 or 1 for player 1 and player 2 respectively
+                        # abs(identifier - 1) = 0 for player 1, 1 for player 2
+                        move = (abs(identifier - 1), constants.NUM_COLS - dice_rolls[i][0], i) 
+
+                        if not self.is_move_valid(move, og_identifier):
+                            move = None
+
+
+                    elif og_identifier > 0 and self.game_board[row][col] > 0:
                         if row == 0 and col - dice_rolls[i][0] < 0:
                             move = (1, abs(col - dice_rolls[i][0]) - 1, i)
                         elif row == 0:
@@ -197,6 +214,7 @@ class Board:
 
                     if move is not None and self.is_move_valid(move, og_identifier):
                         possible_moves.append(move)
+
                         # print("board iden:",self.game_board[row][col],"iden",og_identifier,"moving to:",move)
         return possible_moves
 
