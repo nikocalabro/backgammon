@@ -2,6 +2,7 @@
 ###                                            ML MINI MAX BACKGAMMON                                                ###
 ########################################################################################################################
 #hi niko
+# hi landon
 import random
 from collections.abc import Sequence
 from enum import Enum
