@@ -40,8 +40,10 @@ class AIPlayer(Player):
         }
 
     def choose_move(self, board, dice_roll) -> tuple[int, int] | None:
+        # print(board.get_game_board_in_board())
         possible_moves = board.get_possible_moves(dice_roll,self.identifier)
-        if self.choose_random_move and possible_moves is not None:
+        
+        if self.choose_random_move and possible_moves is not None: # could be smth off in get possible moves
             return random.choice(possible_moves)
         return self.find_best_move(board,dice_roll)
 
@@ -182,7 +184,14 @@ class AIPlayer(Player):
         roll = dice_rolls[dice_index_used][0]
         row, col = move
         identifier = int((og_identifier + 1) / 2)  # 0 for black, 1 for white
-        other_row = abs(identifier - 1)
+        other_row = abs(identifier - 1) # 1 for black, 0 for white
+
+        if og_identifier > 0 and row == 0 and col+roll>= constants.NUM_COLS: # player 1 was in jail
+            return 1, -2
+
+        if og_identifier < 0 and row == 1 and col+roll>= constants.NUM_COLS: # player 2 was in jail
+            return 0, -2
+
         # if row is 1 and black  or row is 1 and white (we need right movement for each of these cases)
         if (row == 0 and og_identifier == constants.PLAYER_1_IDENTIFIER) or (row == 1 and og_identifier == constants.PLAYER_2_IDENTIFIER):
             src_col = col + roll

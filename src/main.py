@@ -82,6 +82,7 @@ player_move_input = None
 
 # Reset button for Human players to restart game
 reset_button = None
+stuck_button = None
 dice_roll_anim = 0
 dice_rolls = []
 
@@ -113,6 +114,10 @@ def paint() -> None:
             draw_player_one_turn()
         else:
             draw_player_two_turn()
+
+    elif game_manager.game_state == GameState.STUCK:
+        draw_stuck()
+        draw_stuck_button()
 
     elif game_manager.game_state == GameState.GAME_OVER:
         draw_winner()
@@ -349,6 +354,23 @@ def draw_player_one_turn() -> None:
 def draw_player_two_turn() -> None:
     draw_text(window, "Player Two", 25, constants.PLAYER_2_COLOR, (int(constants.WINDOW_WIDTH * 0.93), 10))
 
+def draw_stuck() -> None:
+    if game_manager.current_player == game_manager.player1:
+        color = constants.PLAYER_1_COLOR
+    else:
+        color = constants.PLAYER_2_COLOR
+
+    draw_text(window, "No Possible Moves!", 50, color, (constants.BOARD_CENTER_Y, 100))
+    # pygame.display.flip()
+    # pygame.time.wait(3000)
+    # pygame.event.clear()
+    # game_manager.switch_turn()
+
+def draw_stuck_button() -> None:
+    global stuck_button
+    stuck_button = draw_button(window, "Switch Turn", (int(constants.WINDOW_WIDTH * 0.5), constants.WINDOW_HEIGHT - 100), 20,
+                               constants.COLOR_RED, constants.COLOR_GREEN)
+
 def draw_winner() -> None:
     if game_manager.player_one_won():
         winner_text = "Player One Wins!"
@@ -374,13 +396,17 @@ def process_mouse_event(event: pygame.event.Event) -> None:
     :param event: The Pygame mouse event to process (MOUSEBUTTONDOWN, or MOUSEMOTION)
     """
 
-    global player_move_input
-    global reset_button
+    global player_move_input, reset_button, stuck_button
 
     if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
         if game_manager.game_state == GameState.GAME_OVER:
             if reset_button is not None and reset_button.collidepoint(event.pos):
                 game_manager.reset()
+
+        elif game_manager.game_state == GameState.STUCK:
+            if stuck_button is not None and stuck_button.collidepoint(event.pos):
+                game_manager.switch_turn()
+                
         elif game_manager.game_state == GameState.PLAYING:
             x_pos, y_pos = mouse.get_pos()
             player_move_input = x_pos, y_pos

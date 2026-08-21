@@ -26,8 +26,15 @@ class Board:
         self.cols = constants.NUM_COLS
         # [[5, 0, 0, 0, -3, 0, -5, 0, 0, 0, 0, 2],
         #  [-5, 0, 0, 0, 3, 0, 5, 0, 0, 0, 0, -2]]                             Jail (-2)   Goal (-1)
-        self.game_board = np.array([[5, 0, 0, 0, -3, 0, -5, 0, 0, 0, 0, 2,         0,          0],
-                                    [-5, 0, 0, 0, 3, 0, 5, 0, 0, 0, 0, -2,         0,          0]])
+        # self.game_board = np.array([[5, 0, 0, 0, -3, 0, -5, 0, 0, 0, 0, 2,         0,          0],
+        #                             [-5, 0, 0, 0, 3, 0, 5, 0, 0, 0, 0, -2,         0,          0]])
+
+
+        self.game_board = np.array([[-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,         -1,          0],
+                                    [2, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2,         0,          0]])
+
+
+        # self.game_board = np.zeros((self.rows, self.cols))
         # self.game_board = np.zeros((self.rows, self.cols))
 
         # last move as a tuple (row, col) on game_board
@@ -171,6 +178,35 @@ class Board:
         if dice_rolls is None:
             return None
         possible_moves = []
+        # print(self.game_board)
+
+        identifier = int((og_identifier + 1) / 2)
+
+        # If piece is in jail, must move out of jail first
+        if self.game_board[identifier][-2] != 0: 
+            # print(self.game_board)
+            # print("AI is in jail: ", self.game_board[identifier][-2])
+            for i, roll in enumerate(dice_rolls):
+            # if 0, or not identifier skip!
+                if not dice_rolls[i][-1]:
+                    continue
+                move = None
+
+                # Piece has to move somewhere on row 0 or 1 for player 1 and player 2 respectively
+                # abs(identifier - 1) = 0 for player 1, 1 for player 2
+                move = (abs(identifier - 1), constants.NUM_COLS - dice_rolls[i][0], i) 
+
+                if not self.is_move_valid(move, og_identifier):
+                    move = None
+
+                if move is not None and self.is_move_valid(move, og_identifier):
+                        possible_moves.append(move)
+            
+            # print("Possible moves in jail: ", possible_moves)
+            
+            return possible_moves
+
+
         for row in range(self.rows):
             for col in range(self.cols):
                 if (self.game_board[row][col] == 0
@@ -184,26 +220,26 @@ class Board:
 
                     # First dice is always used because this for loop ascends
 
-                    identifier = int((og_identifier + 1) / 2) # 1 for player 1, 0 for player 2
+                    # identifier = int((og_identifier + 1) / 2) # 1 for player 1, 0 for player 2
 
-                    # If piece is in jail, must move out of jail first
-                    if self.game_board[identifier][-2] != 0: 
+                    # # If piece is in jail, must move out of jail first
+                    # if self.game_board[identifier][-2] != 0: 
 
-                        # Piece has to move somewhere on row 0 or 1 for player 1 and player 2 respectively
-                        # abs(identifier - 1) = 0 for player 1, 1 for player 2
-                        move = (abs(identifier - 1), constants.NUM_COLS - dice_rolls[i][0], i) 
+                    #     # Piece has to move somewhere on row 0 or 1 for player 1 and player 2 respectively
+                    #     # abs(identifier - 1) = 0 for player 1, 1 for player 2
+                    #     move = (abs(identifier - 1), constants.NUM_COLS - dice_rolls[i][0], i) 
 
-                        if not self.is_move_valid(move, og_identifier):
-                            move = None
+                    #     if not self.is_move_valid(move, og_identifier):
+                    #         move = None
 
 
-                    elif og_identifier > 0 and self.game_board[row][col] > 0:
+                    if og_identifier > 0 and self.game_board[row][col] > 0:
                         if row == 0 and col - dice_rolls[i][0] < 0:
                             move = (1, abs(col - dice_rolls[i][0]) - 1, i)
                         elif row == 0:
                             move = (0, col - dice_rolls[i][0], i)
                         else:
-                            move = possible_moves.append((1, col + dice_rolls[i][0], i))
+                            move = (1, col + dice_rolls[i][0], i)
                     elif og_identifier < 0 and self.game_board[row][col] < 0:
                         if row == 1 and col - dice_rolls[i][0] < 0:
                             move = (0, abs(col - dice_rolls[i][0]) - 1, i)
@@ -214,7 +250,6 @@ class Board:
 
                     if move is not None and self.is_move_valid(move, og_identifier):
                         possible_moves.append(move)
-
-                        # print("board iden:",self.game_board[row][col],"iden",og_identifier,"moving to:",move)
+        
         return possible_moves
 
