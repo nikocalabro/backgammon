@@ -55,7 +55,7 @@ class Mode(Enum):
 
 
 # Set the current mode here
-mode = Mode.HUMAN_PLAY_HUMAN
+mode = Mode.HUMAN_PLAY_AI
 
 if mode == Mode.TESTING_RANDOM_AI:
     player1 = AIPlayer(True, False)
@@ -82,7 +82,6 @@ player_move_input = None
 
 # Reset button for Human players to restart game
 reset_button = None
-stuck_button = None
 dice_roll_anim = 0
 dice_rolls = []
 
@@ -117,7 +116,6 @@ def paint() -> None:
 
     elif game_manager.game_state == GameState.STUCK:
         draw_stuck()
-        draw_stuck_button()
 
     elif game_manager.game_state == GameState.GAME_OVER:
         draw_winner()
@@ -360,16 +358,11 @@ def draw_stuck() -> None:
     else:
         color = constants.PLAYER_2_COLOR
 
-    draw_text(window, "No Possible Moves!", 50, color, (constants.BOARD_CENTER_Y, 100))
-    # pygame.display.flip()
-    # pygame.time.wait(3000)
-    # pygame.event.clear()
-    # game_manager.switch_turn()
-
-def draw_stuck_button() -> None:
-    global stuck_button
-    stuck_button = draw_button(window, "Switch Turn", (int(constants.WINDOW_WIDTH * 0.5), constants.WINDOW_HEIGHT - 100), 20,
-                               constants.COLOR_RED, constants.COLOR_GREEN)
+    draw_text(window, "No Possible Moves!", 50, color, (constants.BOARD_CENTER_X, constants.BOARD_CENTER_Y-30))
+    pygame.display.flip()
+    pygame.time.wait(2000)
+    pygame.event.clear()
+    game_manager.switch_turn()
 
 def draw_winner() -> None:
     if game_manager.player_one_won():
@@ -382,11 +375,11 @@ def draw_winner() -> None:
         winner_text = "Tie!"
         color = constants.COLOR_WHITE
 
-    draw_text(window, winner_text, 50, color, (int(constants.WINDOW_WIDTH * 0.5), 100))
+    draw_text(window, winner_text, 50, color, (constants.BOARD_CENTER_X, constants.BOARD_CENTER_Y-30))
 
 def draw_reset_button() -> None:
     global reset_button
-    reset_button = draw_button(window, "Reset", (int(constants.WINDOW_WIDTH * 0.5), constants.WINDOW_HEIGHT - 100), 20,
+    reset_button = draw_button(window, "Reset", (int(constants.WINDOW_WIDTH * 0.5), constants.WINDOW_HEIGHT - 30), 20,
                                constants.COLOR_RED, constants.COLOR_GREEN)
 # region User Input ----------------------------------------------------------------------------------------------------
 def process_mouse_event(event: pygame.event.Event) -> None:
@@ -403,10 +396,6 @@ def process_mouse_event(event: pygame.event.Event) -> None:
             if reset_button is not None and reset_button.collidepoint(event.pos):
                 game_manager.reset()
 
-        elif game_manager.game_state == GameState.STUCK:
-            if stuck_button is not None and stuck_button.collidepoint(event.pos):
-                game_manager.switch_turn()
-                
         elif game_manager.game_state == GameState.PLAYING:
             x_pos, y_pos = mouse.get_pos()
             player_move_input = x_pos, y_pos

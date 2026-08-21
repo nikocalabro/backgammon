@@ -26,13 +26,8 @@ class Board:
         self.cols = constants.NUM_COLS
         # [[5, 0, 0, 0, -3, 0, -5, 0, 0, 0, 0, 2],
         #  [-5, 0, 0, 0, 3, 0, 5, 0, 0, 0, 0, -2]]                             Jail (-2)   Goal (-1)
-        # self.game_board = np.array([[5, 0, 0, 0, -3, 0, -5, 0, 0, 0, 0, 2,         0,          0],
-        #                             [-5, 0, 0, 0, 3, 0, 5, 0, 0, 0, 0, -2,         0,          0]])
-
-
-        self.game_board = np.array([[-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,         -1,          0],
-                                    [2, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2,         0,          0]])
-
+        self.game_board = np.array([[5, 0, 0, 0, -3, 0, -5, 0, 0, 0, 0, 2,         0,          0],
+                                    [-5, 0, 0, 0, 3, 0, 5, 0, 0, 0, 0, -2,         0,          0]])
 
         # self.game_board = np.zeros((self.rows, self.cols))
         # self.game_board = np.zeros((self.rows, self.cols))

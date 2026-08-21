@@ -77,27 +77,29 @@ class GameManager:
 
         self.update_scores()
         self.update_jail()
-        if self.board.check_winner() is not None:
-            self.game_state = GameState.GAME_OVER
+        # if self.board.check_winner() is not None:
+        #     self.game_state = GameState.GAME_OVER
 
         #convert pending move into a board space
         if self.current_player.is_ai_player:
             chosen_move = self.current_player.choose_move(self.board, dice_rolls)
+            print(self.board.is_move_valid(chosen_move, self.current_player.identifier, not self.current_player.is_ai_player), chosen_move, dice_rolls)
         else:
             chosen_move = self.current_player.choose_move(self.board, pending_move)
         #dice need to roll
         if current_stage == 0:
-            if move_within_bounds(pending_move,(constants.BOARD_CENTER_X*.085, constants.BOARD_CENTER_Y),
-                                  (constants.DICE_WIDTH,constants.DICE_WIDTH)) or self.current_player.is_ai_player:
+            if self.current_player.is_ai_player or move_within_bounds(pending_move,(constants.BOARD_CENTER_X*.085, constants.BOARD_CENTER_Y),
+                                  (constants.DICE_WIDTH,constants.DICE_WIDTH)):
                 dice_rolls = roll_dice()
                 # print("DICE:",dice_rolls)
                 current_stage += 1
         elif current_stage == 1 and not self.board.get_possible_moves(dice_rolls, self.current_player.identifier):
-
-            if self.player1.is_ai_player or self.player2.is_ai_player:
-                self.switch_turn() # Skip buttons
+            
+            # Will pause and show "No Possible Moves!" if theres a human player
+            if self.player1.is_ai_player and self.player2.is_ai_player:
+                self.switch_turn()
             else:
-                self.game_state = GameState.STUCK # Force "Switch Turn" button to appear for human players
+                self.game_state = GameState.STUCK 
 
         elif current_stage == 1 and self.is_current_player_in_jail():
             select_tile = (int((self.current_player.identifier + 1) / 2), -2)
@@ -112,7 +114,6 @@ class GameManager:
         #pick select tile
         elif current_stage == 2 and self.current_player.is_ai_player:
             if dice_rolls[chosen_move[-1]][-1]:
-                # print("Removed 1 dice:",dice_rolls)
                 # gets rid of the piece the player was on
                 remove_move = self.current_player.get_the_remove_the_select_move(dice_rolls,chosen_move[-1],(chosen_move[0],chosen_move[1]),self.current_player.identifier)
                 
@@ -122,7 +123,7 @@ class GameManager:
                     dice_rolls[chosen_move[-1]][-1] = False
                     # print("Chosen move", chosen_move, "remove_move", remove_move)
                     if remove_move is not None:
-                        self.board.game_board[remove_move[0]][remove_move[1]] -= self.current_player.identifier # maybe an error here
+                        self.board.game_board[remove_move[0]][remove_move[1]] -= self.current_player.identifier
 
                     # if self.board.check_winner() is not None:
                     #     self.game_state = GameState.GAME_OVER
@@ -230,7 +231,12 @@ class GameManager:
         else:
             self.player2.in_jail = False
 
-    def switch_turn(self):
+    def switch_turn(self) -> None:
+        if self.board.check_winner() is not None:
+            self.game_state = GameState.GAME_OVER
+            self.update_scores()
+            return
+
         global current_stage, select_tile, move_tile, possible_moves, dice_rolls
 
         self.current_player = self.player2 if self.current_player == self.player1 else self.player1
