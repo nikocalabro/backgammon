@@ -1,10 +1,6 @@
 ########################################################################################################################
 ###                                            ML MINI MAX BACKGAMMON                                                ###
 ########################################################################################################################
-#hi niko
-# hi landon
-# bellow landon im testing git some more
-# this is really awesome
 import random
 from collections.abc import Sequence
 from enum import Enum
@@ -55,7 +51,7 @@ class Mode(Enum):
 
 
 # Set the current mode here
-mode = Mode.HUMAN_PLAY_AI
+mode = Mode.TESTING_RANDOM_AI
 
 if mode == Mode.TESTING_RANDOM_AI:
     player1 = AIPlayer(True, False)

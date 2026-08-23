@@ -134,7 +134,12 @@ class Board:
         for row in range(self.rows):
             for col in range(self.cols):
 
-                # Add if in jail, return false condition
+                # Player 1 is in jail, return false
+                if identifier > 0 and self.game_board[1][-2] > 0:
+                    return False
+                # Player 2 is in jail, return false
+                elif identifier < 0 and self.game_board[0][-2] < 0:
+                    return False
 
                 # player 1, overlook row 1 col 6-12, and the identifier is the same sign as the one we are looking for
                 if identifier > 0 and row == 0 and self.game_board[row][col] > 0:

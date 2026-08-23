@@ -31,7 +31,7 @@ class AIPlayer(Player):
         super().__init__(is_player_one)
         self.is_ai_player = True
         self.choose_random_move = choose_random_move
-        self.max_move_look_ahead = 3
+        self.max_move_look_ahead = 2
 
         self.testing_diagnostics = {
             "wins": 0,
@@ -40,12 +40,14 @@ class AIPlayer(Player):
         }
 
     def choose_move(self, board, dice_roll) -> tuple[int, int] | None:
-        # print(board.get_game_board_in_board())
         possible_moves = board.get_possible_moves(dice_roll,self.identifier)
         
-        if self.choose_random_move and possible_moves is not None: # could be smth off in get possible moves
+        if not self.choose_random_move:
+            return self.find_best_move(board,dice_roll)
+        elif possible_moves is not None and possible_moves != []:
             return random.choice(possible_moves)
-        return self.find_best_move(board,dice_roll)
+        return None
+
 
     def find_best_move(self, board, dice_rolls) -> tuple[int, int] | None:
         # this method will act as a maximizer for top level in minimax tree
@@ -67,8 +69,7 @@ class AIPlayer(Player):
             board_copy.game_board[remove_move[0]][remove_move[1]] -= self.identifier
             # move through game tree using mini max
             score = self.minimax(board_copy, False, opponent_identifier, dice_rolls,0, float("-inf"), float("inf"))
-
-            if score > max_score:
+            if score > max_score: # >= might be a stupid fix
                 max_score = score
                 best_move = (move[0],move[1],dice_index_used)
 
@@ -82,14 +83,15 @@ class AIPlayer(Player):
         score = 0
         # base evaluate for win, this should be heavily weighted because wins take a while to get to
         winner_identifier = board.check_winner()
-        if winner_identifier == self.identifier:
-            return 20 - depth
-        elif winner_identifier == opponent_identifier:
-            return -20 + depth
+        if winner_identifier is not None:
+            if winner_identifier == self.identifier:
+                return 20 - depth
+            elif winner_identifier == opponent_identifier:
+                return -20 + depth
         #TODO: TEST THIS CODE
-        one_dimension_board = self.get_one_dimension_board(copy.deepcopy(board))
-        # its actually not bad for pieces to be single right now (make it negative for reward)
-        SINGLE_PIECE_PUNISHMENT = -5
+        one_dimension_board = self.get_one_dimension_board(copy.deepcopy(board.game_board))
+
+        SINGLE_PIECE_PUNISHMENT = 5
         JAIL_PUNISHMENT = 10
         SCORE_CHANGE_PER_PIECE = 1 / 20
         black_score = 0
@@ -112,20 +114,25 @@ class AIPlayer(Player):
             black_score -= SCORE_CHANGE_PER_PIECE
             # this is decreasing because we start out at the spot that has the max points for the maximizer
             white_score -= SCORE_CHANGE_PER_PIECE
-        # if self.is_player_one and self.in_jail:
-        #     score -= JAIL_PUNISHMENT
-        # elif not self.is_player_one and self.in_jail:
-        #     score += JAIL_PUNISHMENT
+        if self.is_player_one and self.in_jail:
+            score -= JAIL_PUNISHMENT
+        elif not self.is_player_one and self.in_jail:
+            score += JAIL_PUNISHMENT
 
         # depth limit is hit, retyurn score
         if depth >= self.max_move_look_ahead:
             return score
 
         return None
-    def get_one_dimension_board(self, board):
-        right_side = board.game_board[0]
-        left_side = np.flip(board.game_board[1])
-        return left_side + right_side
+    # def get_one_dimension_board(self, board):
+    #     right_side = board.game_board[0]
+    #     left_side = np.flip(board.game_board[1])
+    #     return left_side + right_side
+
+    def get_one_dimension_board(self, game_board):
+        right_side = game_board[0][:-2]
+        left_side = np.flip(game_board[1][:-2])
+        return np.concatenate((left_side, right_side))
 
     def minimax(self, board, is_maximizing, opponent_identifier,dice_roll, depth: int = 0, alpha=float("-inf"),
                 beta=float("inf")) -> float:

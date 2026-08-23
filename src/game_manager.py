@@ -50,6 +50,8 @@ class GameManager:
         self.current_player = self.player1
         self.game_state = GameState.PLAYING
 
+        self.turn = 0
+
 
     def update(self, pending_move):
 
@@ -83,7 +85,7 @@ class GameManager:
         #convert pending move into a board space
         if self.current_player.is_ai_player:
             chosen_move = self.current_player.choose_move(self.board, dice_rolls)
-            print(self.board.is_move_valid(chosen_move, self.current_player.identifier, not self.current_player.is_ai_player), chosen_move, dice_rolls)
+            # print("chosen_move:", chosen_move, "dice:",dice_rolls)
         else:
             chosen_move = self.current_player.choose_move(self.board, pending_move)
         #dice need to roll
@@ -126,7 +128,7 @@ class GameManager:
                         self.board.game_board[remove_move[0]][remove_move[1]] -= self.current_player.identifier
 
                     # if self.board.check_winner() is not None:
-                    #     self.game_state = GameState.GAME_OVER
+                    #     self.update_ai_player_testing_diagnostics(self.current_player.identifier)
 
                     no_more_dice = True
                     for i in range(len(dice_rolls)):
@@ -232,9 +234,12 @@ class GameManager:
             self.player2.in_jail = False
 
     def switch_turn(self) -> None:
+        # print(self.turn, self.board.game_board)
+        # self.turn = self.turn+1
         if self.board.check_winner() is not None:
-            self.game_state = GameState.GAME_OVER
+            self.game_state = GameState.GAME_OVER # change orde of these lines?
             self.update_scores()
+            self.update_ai_player_testing_diagnostics(self.current_player.identifier)
             return
 
         global current_stage, select_tile, move_tile, possible_moves, dice_rolls
