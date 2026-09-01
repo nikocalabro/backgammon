@@ -2,7 +2,7 @@
 
 ## Repository Structure
 ```
-nikocalabro-backgammon/
+backgammon/
     ├── README.md
     └── src/
         ├── ai_player.py
